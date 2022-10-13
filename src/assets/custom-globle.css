@@ -1,0 +1,35 @@
+.v-input--radio-group--row .v-input--radio-group__input {
+      justify-content: space-around !important;
+}
+
+
+
+
+
+
+/* width */
+::-webkit-scrollbar {
+      width: 10px;
+    }
+    
+/* Track */
+::-webkit-scrollbar-track {
+background: #f1f1f1; 
+border-radius: 10px;
+}
+     
+/* Handle */
+::-webkit-scrollbar-thumb {
+background:teal; 
+border-radius: 10px;
+}
+    
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+background: rgb(1, 158, 158); 
+}
+
+
+.v-input--radio-group--row .v-input--radio-group__input {
+      flex-wrap: nowrap !important;
+}
