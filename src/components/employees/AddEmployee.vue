@@ -211,8 +211,8 @@ export default {
                     this.dialog=false
                     this.Reset()
                 } else {
-                    console.log('error in category creation');
                     this.loading=false
+                    this.unsuccessAlert = true
                 }
             }).catch(error => {
                 this.unsuccessAlert = true
