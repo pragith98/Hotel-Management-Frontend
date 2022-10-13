@@ -120,9 +120,12 @@
             </v-card>
 
             <v-snackbar :timeout="3000" v-model="unsuccess" color="red"  bottom ><v-icon left>mdi-alert-outline</v-icon> Employee Registration has been<strong>failed</strong> </v-snackbar>
-            <v-snackbar :timeout="3000" v-model="success" color="green"  bottom><v-icon left>mdi-check</v-icon>Employee Registration has been <strong>successful</strong> </v-snackbar>
         
         </v-dialog>
+
+        
+        <v-snackbar :timeout="3000" v-model="success" color="green"  bottom><v-icon left>mdi-check</v-icon>Employee Registration has been <strong>successful</strong> </v-snackbar>
+    
     </v-row>
 </template>
 
@@ -171,7 +174,7 @@ export default {
 
             // -----------dropdown list-----------
             gender: ['Male', 'Female', 'Other'],
-            title: ['Mr.', 'Ms.', 'Mrs.', 'Miss.', 'Rev.'],
+            title: ['Mr.', 'Ms.', 'Mrs.', 'Miss.'],
             types: ['Chef', 'Manager', 'Receptionist', 'Waiter', 'Cashier'],
 
 
@@ -186,7 +189,6 @@ export default {
         },
 
         createEmployee() {
-            console.log(this.employeeType, this.getTitle, this.nicNo, this.fname, this.lname, this.Bdate, this.getGender, this.tp, this.address, this.email, this.basicSalary+".00")
             this.loading = true
             this.axios.post(this.$apiUrl + "/api/v1.0/employees", {
                 employeeType: this.employeeType,
@@ -199,15 +201,18 @@ export default {
                 telNo: this.tp,
                 address: this.address,
                 email: this.email,
-                basicSalary: this.basicSalary+".00"
+                salary: this.basicSalary+".00"
 
             })
             .then(Response => {
                 if (Response.data == true) {
                     this.successAlert()
                     this.loading=false
+                    this.dialog=false
+                    this.Reset()
                 } else {
                     console.log('error in category creation');
+                    this.loading=false
                 }
             }).catch(error => {
                 this.unsuccessAlert = true
