@@ -2,7 +2,7 @@
     <v-row justify="end">
         <v-dialog v-model="dialog" scrollable max-width="700px" persistent>
             <template v-slot:activator="{ on, attrs }">
-                <v-btn x-small class="blue-grey" fab dark depressed v-bind="attrs" v-on="on">
+                <v-btn @click="getEmployees()" x-small class="blue-grey" fab dark depressed v-bind="attrs" v-on="on">
                     <v-icon dark>mdi-eye</v-icon>
                 </v-btn>
             </template>
@@ -67,10 +67,11 @@
                                                 <v-menu ref="menud" v-model="BdateMenu" :close-on-content-click="false"
                                                     transition="scale-transition" offset-y min-width="auto">
                                                     <template v-slot:activator="{ on, attrs }">
-                                                        <v-text-field v-model="Bdate" label="Birthday" readonly v-bind="attrs" v-on="on" :rules="dateRules"></v-text-field>
+                                                        <v-text-field v-model="Bdate" label="Birthday" readonly
+                                                            v-bind="attrs" v-on="on" :rules="dateRules"></v-text-field>
                                                     </template>
                                                     <v-date-picker @input="BdateMenu = false" v-model="Bdate"
-                                                        :active-picker.sync="datePicker"
+                                                        :active-picker.sync="BdatePicker"
                                                         :max="(new Date(Date.now() - (new Date()).getTimezoneOffset() * 60000)).toISOString().substr(0, 10)"
                                                         min="1950-01-01"></v-date-picker>
                                                 </v-menu>
@@ -89,26 +90,24 @@
                                     </v-col>
 
                                     <v-col cols="12" md="6" sm="6">
-                                        <template>
-                                            <div>
-                                                <v-menu ref="menud" v-model="dateMenu" :close-on-content-click="false"
-                                                    transition="scale-transition" offset-y min-width="auto">
-                                                    <template v-slot:activator="{ on, attrs }">
-                                                        <v-text-field v-model="date" label="Joined Date" readonly v-bind="attrs" v-on="on" :rules="dateRules"></v-text-field>
-                                                    </template>
-                                                    <v-date-picker @input="dateMenu = false" v-model="date"
-                                                        :active-picker.sync="datePicker"
-                                                        :max="(new Date(Date.now() - (new Date()).getTimezoneOffset() * 60000)).toISOString().substr(0, 10)"
-                                                        min="1950-01-01"></v-date-picker>
-                                                </v-menu>
-                                            </div>
-                                        </template>
+                                        <v-text-field v-model="basicSalary" placeholder="ex: 2500.00"
+                                            :rules="salaryRules" label="Basic Salary" required maxlength="10">
+                                        </v-text-field>
                                     </v-col>
 
                                     <v-col cols="12" md="6" sm="6">
-                                        <v-select :items="types" :rules="typeRules" label="Employee Type" v-model="employeeType">
+                                        <v-select disabled :items="types" :rules="typeRules" label="Employee Type"
+                                            v-model="employeeType">
                                         </v-select>
                                     </v-col>
+
+                                    <v-col cols="12" md="6" sm="6">
+                                        <v-select :items="statusList" :rules="statusRules" label="Employee status"
+                                            v-model="status">
+                                        </v-select>
+                                    </v-col>
+
+                                    <v-col cols="12" md="6" sm="6"></v-col>
 
                                 </v-row>
 
@@ -122,12 +121,22 @@
                     <v-spacer></v-spacer>
                     <v-btn @click="dialog = false, Reset ()" outlined color="grey">Cancel</v-btn>
                     <v-btn :loading="loading"
-                    :disabled="!valid || !getTitle || !fname || !lname || !tp || !email || !address || !getGender || !nicNo || !nicType || !employeeType || !Bdate || !date"
-                        color="primary" @click="createSubject()" depressed>Update</v-btn>
+                        :disabled="!valid || !getTitle || !fname || !lname || !tp || !email || !address || !getGender || !nicNo || !nicType || !employeeType || !Bdate || !basicSalary"
+                        color="primary" @click="updateEmployee()" depressed>Update</v-btn>
                 </v-card-actions>
 
             </v-card>
+
+            <v-snackbar :timeout="3000" v-model="unsuccess" color="red" bottom>
+                <v-icon left>mdi-alert-outline</v-icon> Employee update has been<strong>failed</strong>
+            </v-snackbar>
+
         </v-dialog>
+
+        <v-snackbar :timeout="3000" v-model="success" color="green" bottom>
+            <v-icon left>mdi-check</v-icon>Employee update has been <strong>successful</strong>
+        </v-snackbar>
+
     </v-row>
 </template>
 
@@ -135,7 +144,7 @@
 
 <script>
 export default {
-    props: ['room'],
+    props: ['employee'],
     data() {
         return {
             loading: false,
@@ -149,16 +158,17 @@ export default {
             address: '',
             getGender: '',
             nicNo: '',
-            nicType: 'old',
-            employeeType:'',
-
-            datePicker: null,
-            date: '',
-            dateMenu: false,
+            nicType: '',
+            employeeType: '',
+            basicSalary: '',
+            status:'',
 
             BdatePicker: null,
             Bdate: '',
             BdateMenu: false,
+
+            success: false,
+            unsuccess: false,
 
             // -----------Validation rules-----------
             nameRules: [v => !!v || 'Name is required', v => /^[a-zA-Z_ ]*$/.test(v) || 'Must be text only', v => (v && v.length > 2) || 'Name must be greater than 2'],
@@ -171,67 +181,80 @@ export default {
             addressRules: [v => !!v || 'Address is required', v => (v && v.length > 5) || 'Address must be greater than 5'],
             dateRules: [v => !!v || 'Date is required'],
             typeRules: [v => !!v || 'Employee type is required'],
+            salaryRules: [v => !!v || 'Salary is required', v => /^\d+$/.test(v) || 'Must be a number'],
+            statusRules: [v => !!v || 'status is required'],
 
 
             // -----------dropdown list-----------
             gender: ['Male', 'Female', 'Other'],
-            title: ['Mr.', 'Ms.', 'Mrs.', 'Miss.', 'Rev.'],
-            types: ['Mr.', 'Ms.', 'Mrs.', 'Miss.', 'Rev.'],
-            
+            title: ['Mr.', 'Ms.', 'Mrs.', 'Miss.'],
+            types: ['Chef', 'Manager', 'Receptionist', 'Waiter', 'Cashier'],
+            statusList: ['Active', 'Deactivate'],
+
 
         }
     },
 
 
     methods: {
-        onPickFile() {
-            this.$refs.fileInput.click();
-        },
-        onFilePicked(event) {
-            const files = event.target.files
-            let filename = files[0].name
-            if (filename.lastIndexOf('.') <= 0) {
-                return alert('please add a valid file!!!')
-            }
-            const fileReader = new FileReader()
-            fileReader.addEventListener('load', () => {
-                this.imageUrl = fileReader.result
+
+        getEmployees() {
+            this.axios.get(this.$apiUrl + "/api/v1.0/employees/" + this.employee.id).then(Response => {
+                this.employeeType = Response.data.employeeType,
+                    this.getTitle = Response.data.title,
+                    this.nicNo = Response.data.nic,
+                    this.fname = Response.data.firstName,
+                    this.lname = Response.data.lastName,
+                    this.Bdate = Response.data.dob,
+                    this.getGender = Response.data.sex,
+                    this.tp = Response.data.telNo,
+                    this.address = Response.data.address,
+                    this.email = Response.data.email,
+                    this.basicSalary = Response.data.salary,
+                    this.status = Response.data.status
+
+                if (this.nicNo.length > 10) {
+                    this.nicType = 'new'
+                } else {
+                    this.nicType = 'old'
+                }
+
             })
-            fileReader.readAsDataURL(files[0])
-            this.image = files[0]
         },
 
 
+        updateEmployee() {
+            this.loading = true
+            this.axios.put(this.$apiUrl + "/api/v1.0/employees/"+ this.employee.id, {
+                title: this.getTitle,
+                nic: this.nicNo,
+                firstName: this.fname,
+                lastName: this.lname,
+                dob: this.Bdate,
+                sex: this.getGender,
+                telNo: this.tp,
+                address: this.address,
+                email: this.email,
+                salary: this.basicSalary + ".00",
+                status: this.status
 
-        createCategory() {
-            var rule = /^[a-zA-Z\s.]+$/;
-            if (!rule.test(this.newCategory)) {
-                this.errormsg = "Must be text only"
-            } else if (this.newCategory.length < 4) {
-                this.errormsg = "Name must be greater than 3"
-            } else {
-                this.errormsg = null
-
-
-
-                this.axios.post(this.$apiUrl + "/api/v1.0/CategoryManagement/categories", {
-                    categoryName: this.newCategory
-                })
-                    .then(Response => {
-                        if (Response.data.success == true) {
-                            this.newCategory = null
-                            this.categoryCreated = true
-                            this.hideTable = false
-                            this.hideActions = false
-
-                            this.getAllCategories()
-                        } else {
-                            console.log('error in category creation');
-                        }
-                    })
-
-            }
+            }).then(Response => {
+                if (Response.data == true) {
+                    this.successAlert()
+                    this.loading = false
+                    this.dialog = false
+                    this.Reset()
+                } else {
+                    this.unsuccessAlert = true
+                    this.loading = false
+                }
+            }).catch(error => {
+                this.unsuccessAlert = true
+                this.loading = false
+                console.log(error.data)
+            });
         },
+
 
         Reset() {
             this.$refs.form.reset()
@@ -240,17 +263,12 @@ export default {
 
         successAlert() {
             this.$emit('success', true)
+            this.success=true
         },
         failedAlert() {
             this.$emit('failed', true)
+            this.success=false
         }
-
-
-
-
-
-
-
 
     }
 }
