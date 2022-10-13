@@ -2,7 +2,7 @@ import Vue from 'vue'
 import App from './App.vue'
 import router from './router'
 import vuetify from './plugins/vuetify'
-import axios from 'axios'
+//import axios from 'axios'
 
 
 require('./assets/custom-globle.css');
@@ -16,7 +16,7 @@ Vue.prototype.$emailPassword="nymefuphawvotnst"  //////////////system email pass
 Vue.prototype.$tpNo="076 9198533"  //////////////system TP no.
 
 //axios.defaults.headers.common['Authorization'] = 'Bearer ' + localStorage.getItem('userToken') ///////user token into header
- axios.defaults.headers.common['Content-type'] = 'application/json'
+ //axios.defaults.headers.common['Content-type'] = 'application/json'
 
 // var logedUser = JSON.parse(localStorage.getItem('user'))
 // if(logedUser){
