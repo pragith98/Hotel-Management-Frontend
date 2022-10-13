@@ -1,4 +1,4 @@
-# ict-academy-frontend
+# Hotel-Management-Frontend
 
 ## Project setup
 ```
