@@ -1,0 +1,148 @@
+<template>
+    <v-row justify="end">
+        <v-dialog v-model="dialog" scrollable max-width="700px" persistent>
+            <template v-slot:activator="{ on, attrs }">
+                <v-btn class="blue-grey" dark depressed v-bind="attrs" v-on="on">Add User
+                    <v-icon dark right>mdi-plus</v-icon>
+                </v-btn>
+            </template>
+
+            <v-card max-width="700" flat>
+                <v-card-title class="heading-1 blue-grey lighten-4  blue-grey--text text--darken-2">Add User
+                </v-card-title>
+                <v-divider></v-divider>
+
+                <v-card-text>
+                    <v-form ref="form" v-model="valid" lazy-validation>
+                        <v-row style="padding:12px">
+
+                            <v-col>
+                                <v-row justify="center" dense>
+
+                                    <v-col cols="12" md="12" sm="12">
+                                        <v-autocomplete :items="user" :rules="userRules" label="Employees" v-model="getTitle">
+                                        </v-autocomplete>
+                                    </v-col>
+
+                                    <v-col cols="12" md="6" sm="6">
+                                        <v-text-field v-model="userName" :rules="userNameRules" label="UserName" required>
+                                        </v-text-field>
+                                    </v-col>
+
+                                    <v-col cols="12" md="6" sm="6">
+                                        <v-text-field v-model="password" :rules="passwordRules" label="Password" required>
+                                        </v-text-field>
+                                    </v-col>
+
+                                </v-row>
+
+                            </v-col>
+                        </v-row>
+                    </v-form>
+                </v-card-text>
+                <v-divider></v-divider>
+
+                <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn @click="dialog = false, Reset ()" outlined color="grey">Cancel</v-btn>
+                    <v-btn :loading="loading"
+                        :disabled="!valid || !user || !password || !userName "
+                        color="primary" @click="createSubject()" depressed>Save</v-btn>
+                </v-card-actions>
+
+            </v-card>
+        </v-dialog>
+    </v-row>
+</template>
+
+
+
+<script>
+export default {
+
+    data() {
+        return {
+            loading: false,
+            dialog: false,
+            valid: true,
+            user: '',
+            password:'',
+            userName:'',
+
+            // -----------Validation rules-----------
+            userRules: [v=> !!v || 'User is required'],
+            userNameRules: [v=> !!v || 'Username is required'],
+            passwordRules: [v=> !!v || 'Password is required'],
+            
+            // -----------dropdown list-----------
+            gender:['Male','Female','Other'],
+            title:['Mr.', 'Ms.', 'Mrs.', 'Miss.', 'Rev.'],
+
+        }
+    },
+
+
+    methods: {
+        
+        createCategory() {
+            var rule = /^[a-zA-Z\s.]+$/;
+            if (!rule.test(this.newCategory)) {
+                this.errormsg = "Must be text only"
+            } else if (this.newCategory.length < 4) {
+                this.errormsg = "Name must be greater than 3"
+            } else {
+                this.errormsg = null
+
+
+
+                this.axios.post(this.$apiUrl + "/api/v1.0/CategoryManagement/categories", {
+                    categoryName: this.newCategory
+                })
+                    .then(Response => {
+                        if (Response.data.success == true) {
+                            this.newCategory = null
+                            this.categoryCreated = true
+                            this.hideTable = false
+                            this.hideActions = false
+
+                            this.getAllCategories()
+                        } else {
+                            console.log('error in category creation');
+                        }
+                    })
+
+            }
+        },
+
+        Reset() {
+            this.$refs.form.reset()
+            window.scrollTo(0, 0)
+        },
+
+        successAlert() {
+            this.$emit('success', true)
+        },
+        failedAlert() {
+            this.$emit('failed', true)
+        }
+
+
+
+
+
+
+
+
+    }
+}
+</script>
+
+
+<style scoped>
+fieldset {
+    border-color: rgb(225, 225, 225);
+    border-style: solid;
+    border: 0.1;
+    border-style: solid;
+}
+</style>
